@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<link rel="stylesheet" href="static/style.css" />
+<HTML lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Oasis Park - Manobrista</title>
+</head>
+  <body>
+    <header>
+      <div id="header"></div><br />
+    </header>
+
+  <div class="col-8 m-auto pt-3 pb-2 text-center">
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" >Cadastrar</button>
+  </div>
+
+    <div class="container">
+      <table class="table table-hover">
+        <thead class="thead-dark">
+          <tr align="center">
+            <th scope="col">#</th>
+            <th scope="col">Nome</th>
+            <th scope="col">Sobrenome</th>
+            <th scope="col">CNH</th>
+            <th scope="col">Telefone</th>
+            <th scope="col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in datas %}
+          <tr align="center">
+            <th scope="row">{{item[0]}}</th>
+            <td>{{item[2]}}</td>
+            <td>{{item[3]}}</td>
+            <td>{{item[1]}}</td>
+            <td>{{item[7]}}</td>
+            <td>
+              <a href="/listarmanobrista/{{item[0]}}/" class="btn btn-dark">VIEW</a>
+              <a href="" class="btn btn-primary">UPDATE</a>
+              <a href="/deletarmanobrista/{{item[0]}}/" class="btn btn-danger btnDel">DELETE</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <form action="/gravarmanobrista" method="POST" id="insert-manobrista">
+      
+      <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog " role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="CadastroManobristalbl">Cadastre um manobrista</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              
+                <div class="row">
+                    <div class="col-12 col-sm-12">
+                      <label for="cnhmanobrista" class="col-form-label">CPF:</label>
+                      <input type="number" class="form-control col-md-4 .ml-auto" id="cnhmanobrista" name="cnhmanobrista">
+                    </div>
+                  </div>
+                  <div class="row">                  
+                  <div class="col-6 col-sm-6">
+                    <label for="nomemanobrista" class="col-form-label">Nome:</label>
+                    <input type="text" class="form-control" name="nomemanobrista" id="nomemanobrista">
+                  </div>
+
+                  <div class="col-6 col-sm-6">
+                    <label for="sobrenomemanobrista" class="col-form-label">Sobrenome:</label>
+                    <input type="text" class="form-control" name="sobrenomemanobrista" id="sobrenomemanobrista">
+                  </div>
+                  
+                </div>
+                <div class="row">                  
+                  <div class="col-6 col-sm-6">
+                    <label for="rgmanobrista" class="col-form-label">RG:</label>
+                    <input type="number" class="form-control" name="rgmanobrista" id="rgmanobrista">
+                  </div>
+
+                  <div class="col-6 col-sm-6">
+                    <label for="enderecomanobrista" class="col-form-label">Endereço:</label>
+                    <input type="text" class="form-control" name="enderecomanobrista" id="enderecomanobrista">
+                  </div>
+                  
+                </div>
+                <div class="row">                  
+                  <div class="col-6 col-sm-6">
+                    <label for="salariomanobrista" class="col-form-label">Salário:</label>
+                    <input type="number" class="form-control" name="salariomanobrista" id="salariomanobrista">
+                  </div>
+
+                  <div class="col-6 col-sm-6">
+                    <label for="telefonemanobrista" class="col-form-label">Telefone:</label>
+                    <input type="number" class="form-control" name="telefonemanobrista" id="telefonemanobrista">
+                  </div>                
+                </div>
+              
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+              <input type="submit" class="btn btn-primary" value="Cadastrar">
+            </div>
+          </div>
+        </div>
+      </div>
+  </form>
+
+
+    <!-- <form action="/gravaratendente" method="POST">
+      <label for="cpf">CPF:</label><br>
+      <input type="number" name="cpf" /><br>
+      <label for="nome">Nome:</label><br>
+      <input type="text" name="nome" /><br>
+      <label for="sobrenome">Sobrenome:</label><br>
+      <input type="text" name="sobrenome" /><br>
+      <label for="rg">RG:</label><br>
+      <input type="number" name="rg" /><br>
+      <label for="endereco">Endereço:</label><br>
+      <input type="text" name="endereco" /><br>
+      <label for="salario">Salário:</label><br>
+      <input type="number" name="salario" /><br>
+      <label for="telefone">Telefone:</label><br>
+      <input type="number" name="telefone" /><br>
+      <br><br>
+      <input type="submit" value="enviar" />
+    </form> -->
+
+    <script src="/static/javascript.js"></script>
+  </body>
+  <footer>
+    <div id="footer"></div>
+  </footer>
+</HTML>
+
+
+
+<!-- Scrip para chamar o modal -->
+<script>
+  $('#exampleModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget) // Button that triggered the modal
+    var recipient = button.data('whatever') // Extract info from data-* attributes
+    var modal = $(this)
+    modal.find('.modal-title').text('Cadastrar Manobrista')
+    modal.find('.modal-body input').val(recipient)
+  });
+
+
+  $("#header").load("/header");
+  $("#footer").load("/footer");
+
+</script>
+
+
+
+
+<!--<HTML>
+ <form action="/gravarmanobrista" method="POST">
+    <label for="cnh">CNH:</label><br>
+    <input type="number" name="cnh" /><br>
+    <label for="nome">Nome:</label><br>
+    <input type="text" name="nome" /><br>
+    <label for="sobrenome">Sobrenome:</label><br>
+    <input type="text" name="sobrenome" /><br>
+    <label for="rg">RG:</label><br>
+    <input type="number" name="rg" /><br>
+    <label for="endereco">Endereço:</label><br>
+    <input type="text" name="endereco" /><br>
+    <label for="salario">Salário:</label><br>
+    <input type="number" name="salario" /><br>
+    <label for="telefone">Telefone:</label><br>
+    <input type="number" name="telefone" /><br>
+    <br><br>
+    <input type="submit" value="enviar" />
+</form>
+
+</HTML> -->
