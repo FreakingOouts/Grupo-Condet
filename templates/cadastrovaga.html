@@ -37,7 +37,7 @@
             <td>{{item[2]}}</td>
             <td>
               <a href="/listarvaga/{{item[0]}}/" class="btn btn-dark">VIEW</a>
-              <a href="/alterarvaga/{{item[0]}}/" class="btn btn-primary">UPDATE</a>
+              <a href="/listaparaalteravaga/{{item[0]}}/" class="btn btn-primary">UPDATE</a>
               <a href="/deletarvaga/{{item[0]}}/" class="btn btn-danger btnDel">DELETE</a>
             </td>
           </tr>
@@ -72,9 +72,9 @@
                       <label class="input-group-text" for="inputGroupSelect01">Situação</label>
                     </div>
                     <select class="custom-select" id="inputGroupSelect01" name="situacaovaga">
-                      <option selected>Selecione</option>
+                      <option>Selecione</option>
                       <option value="Ocupado">Ocupado</option>
-                      <option value="Desocupado">Desocupado</option>
+                      <option value="Desocupado" selected>Desocupado</option>
                     </select>
                   </div>
                   <br>
