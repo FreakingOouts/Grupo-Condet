@@ -50,10 +50,12 @@ def selectcliente():
     cursor = conn.cursor()
     cursor.execute('select idAtendente, CpfAtendente from Atendente')
     atendente = cursor.fetchall()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente from Cliente')
+    cursor.execute('select idPlano, nomePlano from Plano')
+    planos = cursor.fetchall()
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, Cliente.idPlano, EnderecoCliente, idAtendente, TelefoneCliente, nomePlano from Cliente inner join Plano on Cliente.idPlano = Plano.idPlano')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('cadastrocliente.html',datas=data, atendente=atendente)
+    return render_template('cadastrocliente.html',datas=data, atendente=atendente, planos=planos)
 
 
 ####  ---------------  GRAVAR CLIENTE ------------- #####
@@ -64,15 +66,16 @@ def gravarcliente():
     nomecliente = request.form['nomeCliente']
     sobrenomecliente = request.form['sobrenomeCliente']
     rgcliente = request.form['rgCliente']
+    idplano = request.form['idPlano']
     enderecocliente = request.form['enderecoCliente']
     idAtendente = request.form['idAtendente']
     telefonecliente = request.form['telefoneCliente']
 
-    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and idAtendente and telefonecliente:
+    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and idplano and enderecocliente and idAtendente and telefonecliente:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente) VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, idAtendente, telefonecliente))
+        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, idPlano, EnderecoCliente, idAtendente, TelefoneCliente) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, idplano, enderecocliente, idAtendente, telefonecliente))
         conn.commit()
     return render_template('cadastrocliente.html')
 
@@ -82,13 +85,17 @@ def gravarcliente():
 
 @app.route('/listaparaalteracliente/<int:pk>/', methods=['POST', 'GET'])
 def listaparaalteracliente(pk):    
-    conn1 = mysql.connect()
-    cursor1 = conn1.cursor()
-    cursor1.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente from Cliente where idCliente = ' + str(pk))
-    data = cursor1.fetchall()
-    conn1.commit()
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute('select Atendente.idAtendente, CpfAtendente from Atendente inner join Cliente on Atendente.idAtendente = Cliente.idAtendente where Cliente.idCliente = '+ str(pk))
+    atendente = cursor.fetchall()
+    cursor.execute('select idPlano, nomePlano from Plano')
+    planos = cursor.fetchall()
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, TelefoneCliente, CpfAtendente, nomePlano from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente inner join Plano on Cliente.idPlano = Plano.idPlano where idCliente = ' + str(pk))
+    data = cursor.fetchall()
+    conn.commit()
     
-    return render_template('alteracliente.html', datas=data, pk = pk)
+    return render_template('alteracliente.html', datas=data, atendente=atendente, planos=planos, pk = pk)
 
 
 @app.route('/alterarcliente/<int:pk>/', methods=['POST', 'GET'])
@@ -97,14 +104,16 @@ def alterarcliente(pk):
     nomecliente = request.form['nomeCliente']
     sobrenomecliente = request.form['sobrenomeCliente']
     rgcliente = request.form['rgCliente']
+    idplano = request.form['idPlano']
     enderecocliente = request.form['enderecoCliente']
     telefonecliente = request.form['telefCliente']
 
-    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and telefonecliente:
+    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and idplano and enderecocliente and telefonecliente:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute('UPDATE Cliente SET CpfCliente=%s, NomeCliente=%s, SobrenomeCliente=%s, RgCliente=%s, EnderecoCliente=%s, TelefoneCliente=%s WHERE idCliente=%s',
-                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, telefonecliente, str(pk)))
+        cursor.execute('UPDATE Cliente SET CpfCliente=%s, NomeCliente=%s, SobrenomeCliente=%s, RgCliente=%s, idPlano=%s, EnderecoCliente=%s, TelefoneCliente=%s WHERE idCliente=%s',
+                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, idplano, enderecocliente, telefonecliente, str(pk)))
+        conn.commit()
 
     return render_template('alteracliente.html', pk = pk)
 
@@ -116,7 +125,7 @@ def alterarcliente(pk):
 def listarcliente(pk):
     conn = mysql.connect()
     cursor = conn.cursor()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, Cliente.idAtendente, TelefoneCliente, CpfAtendente from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente where idCliente = ' + str(pk))
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, TelefoneCliente, CpfAtendente, nomePlano from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente inner join Plano on Cliente.idPlano = Plano.idPlano where idCliente = ' + str(pk))
     data = cursor.fetchall()
     conn.commit()
     return render_template('listacliente.html', datas=data, pk = pk)
@@ -124,14 +133,14 @@ def listarcliente(pk):
 
 ####  ---------------  DELETAR CLIENTE ------------- #####
 
-# @app.route('/deletecliente/<int:pk>/', methods=['GET'])
-# def deletecliente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastrocliente.html', datas=data, pk = pk)
+@app.route('/deletecliente/<int:pk>/', methods=['GET'])
+def deletecliente(pk):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
+    data = cursor.fetchall()
+    conn.commit()
+    return render_template('cadastrocliente.html', datas=data, pk = pk)
 
 
 
@@ -297,19 +306,20 @@ def alterarmanobrista(pk):
         cursor = conn.cursor()
         cursor.execute('UPDATE Manobrista SET CnhManobrista=%s, NomeManobrista=%s, SobrenomeManobrista=%s, RgManobrista=%s, EnderecoManobrista=%s, SalarioManobrista=%s, TelefoneManobrista=%s WHERE idManobrista=%s',
                        (cpfmanobrista, nomemanobrista, sobrenomecmanobrista, rgcmanobrista, enderecomanobrista, salrariomanobrista, telefonemanobrista, str(pk)))
+        conn.commit()
 
     return render_template('alteramanobrista.html', pk = pk)
 
 #### ------------- DELETAR MANOBRISTA ---------- ####
 
-#@app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
-#def deletaratendente(pk):
-#      conn = mysql.connect()
-#      cursor = conn.cursor()
-#      cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
-#      data = cursor.fetchall()
-#      conn.commit()
-#      return render_template('cadastromanobrista.html', datas=data, pk = pk)
+@app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
+def deletarmanobrista(pk):
+     conn = mysql.connect()
+     cursor = conn.cursor()
+     cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
+     data = cursor.fetchall()
+     conn.commit()
+     return render_template('cadastromanobrista.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS MANOBRISTA ---------- ############################
 
@@ -371,18 +381,19 @@ def alterarvaga(pk):
         cursor = conn.cursor()
         cursor.execute('UPDATE Vaga SET NumeroVaga=%s, Situacao=%s WHERE idVaga=%s',
                        (numerovaga, situacaovaga, str(pk)))
+        conn.commit()
 
     return render_template('alteravaga.html', pk = pk)
 #### ------------- DELETAR VAGA ---------- ####
 
-#@app.route('/deletarvaga/<int:pk>/', methods=['GET'])
-#def deletaratendente(pk):
-#    conn = mysql.connect()
-#    cursor = conn.cursor()
-#    cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
-#    data = cursor.fetchall()
-#    conn.commit()
-#    return render_template('cadastrovaga.html', datas=data, pk = pk)
+@app.route('/deletarvaga/<int:pk>/', methods=['GET'])
+def deletarvaga(pk):
+   conn = mysql.connect()
+   cursor = conn.cursor()
+   cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
+   data = cursor.fetchall()
+   conn.commit()
+   return render_template('cadastrovaga.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS VAGA ---------- ############################
 
@@ -411,16 +422,6 @@ def main():
     data = cursor.fetchall()
     conn.commit()
     return render_template('index.html',datas=data, cliente=cliente, vaga=vaga, atendente=atendente)
-
-#@app.route('/selectparaforcliente', methods=['POST', 'GET'])
-def selectparaforcliente():
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute('select idCliente from Cliente')
-    data = cursor.fetchall()
-    conn.commit()
-    return render_template('index.html',cliente=data)
-
 
 
 
@@ -459,70 +460,18 @@ def registrarsaida(pk):
 
 #### ------------- DELETAR VEICULO ---------- ####
 
-#@app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
-#def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastroveiculo.html', datas=data, pk = pk)
+@app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
+def deletarveiculo(pk):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
+    data = cursor.fetchall()
+    conn.commit()
+    return render_template('cadastroveiculo.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS VEICULO ---------- ############################
 
 
-
-#DELETE
-
-#DELETAR ATENDENTE
-# @app.route('/deletaratendente/<int:pk>/', methods=['GET'])
-# def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Atendente where idAtendente = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastroatendente.html', datas=data, pk = pk)
-
-# #DELETAR MANOBRISTA
-# @app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
-# def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastromanobrista.html', datas=data, pk = pk)
-
-# #DELETAR CLIENTE
-# @app.route('/deletarcliente/<int:pk>/', methods=['GET'])
-# def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastrocliente.html', datas=data, pk = pk)
-
-# #DELETAR VAGA
-# @app.route('/deletarvaga/<int:pk>/', methods=['GET'])
-# def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastrovaga.html', datas=data, pk = pk)
-
-# #DELETAR VEICULO
-# @app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
-# def deletaratendente(pk):
-#     conn = mysql.connect()
-#     cursor = conn.cursor()
-#     cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
-#     data = cursor.fetchall()
-#     conn.commit()
-#     return render_template('cadastroveiculo.html', datas=data, pk = pk)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5008))
