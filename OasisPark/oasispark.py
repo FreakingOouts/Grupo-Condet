@@ -1,16 +1,121 @@
 import os
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, session
 from flaskext.mysql import MySQL
+import tkinter
+from tkinter import messagebox
+
+
+root = tkinter.Tk()
+root.withdraw()
+
+
 
 mysql = MySQL()
 app = Flask(__name__)
 
+# Change this to your secret key (can be anything, it's for extra protection)
+app.secret_key = 'HashTestByOasisPark1234567'
+
+#conexão com banco mysql no docker
 # MySQL configurations
+# app.config['MYSQL_DATABASE_USER'] = 'root'
+# app.config['MYSQL_DATABASE_PASSWORD'] = '123456'
+# app.config['MYSQL_DATABASE_DB'] = 'teste'
+# app.config['MYSQL_DATABASE_HOST'] = 'db'
+
+#conexão com banco mysql local
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = '123456'
-app.config['MYSQL_DATABASE_DB'] = 'teste'
-app.config['MYSQL_DATABASE_HOST'] = 'db'
+app.config['MYSQL_DATABASE_DB'] = 'oasisparkdb'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+ 
 mysql.init_app(app)
+
+############################ ------------- LOGIN AND REGISTER---------- ############################
+
+@app.route('/login',  methods=['POST', 'GET'])
+def login():
+    return render_template('login.html')
+
+
+@app.route('/login/entrar',  methods=['POST', 'GET'])
+def entrar():
+    msg = ''
+
+    if request.method == 'POST' and 'userLogin' in request.form and 'passwordLogin' in request.form:
+        # Create variables for easy access
+        userLogin = request.form['userLogin']
+        passwordLogin = request.form['passwordLogin']
+        conn = mysql.connect()
+        cursor = conn.cursor()  
+        
+        cursor.execute(f"select * from Usuarios where Usuario = '{userLogin}' and Senha = '{passwordLogin}'")
+        account = cursor.fetchone()
+        if account:
+            # Create session data, we can access this data in other routes
+            session['loggedin'] = True
+            print(account)
+            session['id'] = account[0]
+            session['username'] = account[1]
+            # Redirect to home page
+            return redirect('/')
+        else:
+            # Account doesnt exist or username/password incorrect
+            msg = 'Incorrect username/password!'
+
+    return render_template('login.html', msg=msg)
+
+# http://localhost:5000/python/logout - this will be the logout page
+@app.route('/login/logout')
+def logout():
+    # Remove session data, this will log the user out
+   session.pop('loggedin', None)
+   session.pop('id', None)
+   session.pop('username', None)
+   # Redirect to login page
+   return redirect('/login/entrar')
+
+# http://localhost:5000/pythinlogin/register - this will be the registration page, we need to use both GET and POST requests
+@app.route('/login/registrar', methods=['GET', 'POST'])
+def register():
+    # Output message if something goes wrong...
+    msg = ''
+    # Check if "username", "password" and "email" POST requests exist (user submitted form)
+    if request.method == 'POST' and 'userRegister' in request.form and 'passwordRegister' in request.form and 'email' in request.form and 'nome' in request.form:
+        # Create variables for easy access
+        userRegister = request.form['userRegister']
+        passwordRegister = request.form['passwordRegister']
+        nome = request.form['nome']
+        email = request.form['email']       
+        
+        # Check if account exists using MySQL
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        
+        cursor.execute('INSERT INTO Usuarios (Usuario, Senha, Nome, Email, Telefone) VALUES (%s, %s, %s,%s,Null)', (userRegister, passwordRegister,nome, email))
+        conn.commit()
+        msg = 'You have successfully registered!'
+    return redirect('/login')
+
+
+# def loginUser():
+#     userLogin = request.form['userLogin']
+#     passwordLogin = request.form['passwordLogin']
+
+#     conn = mysql.connect()
+#     cursor = conn.cursor()  
+    
+#     cursor.execute(f"select Senha from Usuarios where Usuario = '{userLogin}'")
+#     senha = cursor.fetchall()
+#     conn.commit()
+#     print(senha[0][0])
+#     if passwordLogin == senha[0][0]:
+#         return render_template('/')
+#     else:
+#         return render_template('/login', messagebox.showinfo("ERRO", "Login não feito"))
+    
+
+
 
 
 ############################ ------------- HISTORICO ---------- ############################
@@ -23,7 +128,14 @@ def historico():
     cursor.execute('select idVeiculo, Placa, Cor, Modelo, idCliente, idVaga, DataHora_Entrada, DataHora_Saida, Valor, idAtendente, Comprovante from Veiculo where DataHora_Saida is not null')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('historico.html',datas=data)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        # User is loggedin show them the home page
+        return render_template('historico.html',datas=data)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 
@@ -50,12 +162,17 @@ def selectcliente():
     cursor = conn.cursor()
     cursor.execute('select idAtendente, CpfAtendente from Atendente')
     atendente = cursor.fetchall()
-    cursor.execute('select idPlano, nomePlano from Plano')
-    planos = cursor.fetchall()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, Cliente.idPlano, EnderecoCliente, idAtendente, TelefoneCliente, nomePlano from Cliente inner join Plano on Cliente.idPlano = Plano.idPlano')
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente from Cliente')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('cadastrocliente.html',datas=data, atendente=atendente, planos=planos)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('cadastrocliente.html',datas=data, atendente=atendente)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 ####  ---------------  GRAVAR CLIENTE ------------- #####
@@ -66,18 +183,17 @@ def gravarcliente():
     nomecliente = request.form['nomeCliente']
     sobrenomecliente = request.form['sobrenomeCliente']
     rgcliente = request.form['rgCliente']
-    idplano = request.form['idPlano']
     enderecocliente = request.form['enderecoCliente']
     idAtendente = request.form['idAtendente']
     telefonecliente = request.form['telefoneCliente']
 
-    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and idplano and enderecocliente and idAtendente and telefonecliente:
+    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and idAtendente and telefonecliente:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, idPlano, EnderecoCliente, idAtendente, TelefoneCliente) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
-                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, idplano, enderecocliente, idAtendente, telefonecliente))
+        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, idAtendente, telefonecliente))
         conn.commit()
-    return render_template('cadastrocliente.html')
+    return redirect('/cliente')
 
 
 ####  ---------------  UPDATE CLIENTE ------------- #####
@@ -85,17 +201,20 @@ def gravarcliente():
 
 @app.route('/listaparaalteracliente/<int:pk>/', methods=['POST', 'GET'])
 def listaparaalteracliente(pk):    
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute('select Atendente.idAtendente, CpfAtendente from Atendente inner join Cliente on Atendente.idAtendente = Cliente.idAtendente where Cliente.idCliente = '+ str(pk))
-    atendente = cursor.fetchall()
-    cursor.execute('select idPlano, nomePlano from Plano')
-    planos = cursor.fetchall()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, TelefoneCliente, CpfAtendente, nomePlano from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente inner join Plano on Cliente.idPlano = Plano.idPlano where idCliente = ' + str(pk))
-    data = cursor.fetchall()
-    conn.commit()
+    conn1 = mysql.connect()
+    cursor1 = conn1.cursor()
+    cursor1.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente from Cliente where idCliente = ' + str(pk))
+    data = cursor1.fetchall()
+    conn1.commit()
     
-    return render_template('alteracliente.html', datas=data, atendente=atendente, planos=planos, pk = pk)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('alteracliente.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 @app.route('/alterarcliente/<int:pk>/', methods=['POST', 'GET'])
@@ -104,16 +223,14 @@ def alterarcliente(pk):
     nomecliente = request.form['nomeCliente']
     sobrenomecliente = request.form['sobrenomeCliente']
     rgcliente = request.form['rgCliente']
-    idplano = request.form['idPlano']
     enderecocliente = request.form['enderecoCliente']
     telefonecliente = request.form['telefCliente']
 
-    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and idplano and enderecocliente and telefonecliente:
+    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and telefonecliente:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute('UPDATE Cliente SET CpfCliente=%s, NomeCliente=%s, SobrenomeCliente=%s, RgCliente=%s, idPlano=%s, EnderecoCliente=%s, TelefoneCliente=%s WHERE idCliente=%s',
-                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, idplano, enderecocliente, telefonecliente, str(pk)))
-        conn.commit()
+        cursor.execute('UPDATE Cliente SET CpfCliente=%s, NomeCliente=%s, SobrenomeCliente=%s, RgCliente=%s, EnderecoCliente=%s, TelefoneCliente=%s WHERE idCliente=%s',
+                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, telefonecliente, str(pk)))
 
     return render_template('alteracliente.html', pk = pk)
 
@@ -125,22 +242,30 @@ def alterarcliente(pk):
 def listarcliente(pk):
     conn = mysql.connect()
     cursor = conn.cursor()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, TelefoneCliente, CpfAtendente, nomePlano from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente inner join Plano on Cliente.idPlano = Plano.idPlano where idCliente = ' + str(pk))
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, Cliente.idAtendente, TelefoneCliente, CpfAtendente from Cliente inner join Atendente on Cliente.idAtendente = Atendente.idAtendente where idCliente = ' + str(pk))
     data = cursor.fetchall()
     conn.commit()
-    return render_template('listacliente.html', datas=data, pk = pk)
+
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('listacliente.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 ####  ---------------  DELETAR CLIENTE ------------- #####
 
-@app.route('/deletecliente/<int:pk>/', methods=['GET'])
-def deletecliente(pk):
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
-    data = cursor.fetchall()
-    conn.commit()
-    return render_template('cadastrocliente.html', datas=data, pk = pk)
+# @app.route('/deletecliente/<int:pk>/', methods=['GET'])
+# def deletecliente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastrocliente.html', datas=data, pk = pk)
 
 
 
@@ -160,7 +285,15 @@ def selectatendente():
     cursor.execute('select idAtendente, CpfAtendente, NomeAtendente, SobrenomeAtendente, RgAtendente, EnderecoAtendente, SalarioAtendente, TelefoneAtendente from Atendente')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('cadastroatendente.html',datas=data)
+
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('cadastroatendente.html',datas=data)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 
@@ -181,7 +314,7 @@ def gravaratendente():
         cursor.execute('insert into Atendente (CpfAtendente, NomeAtendente, SobrenomeAtendente, RgAtendente, EnderecoAtendente, SalarioAtendente, TelefoneAtendente) values (%s, %s, %s, %s, %s, %s, %s)',
                        (cpfatendente, nomeatendente, sobrenomeatendente, rgatendente, enderecoatendente, salarioatendente, telefoneatendente))
         conn.commit()
-    return render_template('cadastroatendente.html')
+    return redirect('/atendente')
 
 
 #### ------------- LISTAR E ALTERAR ATENDENTE ---------- ####
@@ -193,7 +326,14 @@ def listaparaalteraatendente(pk):
     data = cursor1.fetchall()
     conn1.commit()
     
-    return render_template('alteraatendente.html', datas=data, pk = pk)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('alteraatendente.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 @app.route('/alteraratendente/<int:pk>/', methods=['POST', 'GET'])
@@ -225,8 +365,15 @@ def listaratendente(pk):
     cursor.execute('select idAtendente, CpfAtendente, NomeAtendente, SobrenomeAtendente, RgAtendente, EnderecoAtendente, SalarioAtendente, TelefoneAtendente from Atendente where idAtendente = ' + str(pk))
     data = cursor.fetchall()
     conn.commit()
-    return render_template('listaatendente.html', datas=data, pk = pk)
 
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('listaatendente.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 #### ------------- DELETAR ATENDENTE ---------- ####
@@ -257,7 +404,15 @@ def selectmanobrista():
     cursor.execute('select idManobrista, CnhManobrista, NomeManobrista, SobrenomeManobrista, RgManobrista, EnderecoManobrista, SalarioManobrista, TelefoneManobrista from Manobrista')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('cadastromanobrista.html',datas=data)
+
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('cadastromanobrista.html',datas=data)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 #### ------------- GRAVAR MANOBRISTA ---------- ####
@@ -276,7 +431,7 @@ def gravarmanobrista():
         cursor.execute('insert into Manobrista (CnhManobrista, NomeManobrista, SobrenomeManobrista, RgManobrista, EnderecoManobrista, SalarioManobrista, TelefoneManobrista) VALUES (%s, %s, %s, %s, %s, %s, %s)',
                        (cnhmanobrista, nomemanobrista, sobrenomemanobrista, rgmanobrista, enderecomanobrista, salariomanobrista, telefonemanobrista))
         conn.commit()
-    return render_template('cadastromanobrista.html')
+    return redirect('/gravarmanobrista')
 
 
 #### ------------- LISTAR E ALTERAR MANOBRISTA ---------- ####
@@ -288,7 +443,14 @@ def listaparaalteramanobrista(pk):
     data = cursor1.fetchall()
     conn1.commit()
     
-    return render_template('alteramanobrista.html', datas=data, pk = pk)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('alteramanobrista.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 @app.route('/alterarmanobrista/<int:pk>/', methods=['POST', 'GET'])
@@ -312,14 +474,14 @@ def alterarmanobrista(pk):
 
 #### ------------- DELETAR MANOBRISTA ---------- ####
 
-@app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
-def deletarmanobrista(pk):
-     conn = mysql.connect()
-     cursor = conn.cursor()
-     cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
-     data = cursor.fetchall()
-     conn.commit()
-     return render_template('cadastromanobrista.html', datas=data, pk = pk)
+#@app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
+#def deletaratendente(pk):
+#      conn = mysql.connect()
+#      cursor = conn.cursor()
+#      cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
+#      data = cursor.fetchall()
+#      conn.commit()
+#      return render_template('cadastromanobrista.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS MANOBRISTA ---------- ############################
 
@@ -339,7 +501,16 @@ def selectvaga():
     cursor.execute('select idVaga, NumeroVaga, Situacao from Vaga')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('cadastrovaga.html', datas=data)
+
+
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('cadastrovaga.html', datas=data)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 
@@ -356,7 +527,7 @@ def gravarvaga():
         cursor.execute('insert into Vaga (NumeroVaga, Situacao) VALUES (%s, %s)',
                        (numerovaga, situacaovaga))
         conn.commit()
-    return render_template('cadastrovaga.html')
+    return redirect('/gravarvaga')
 
 
 #### ------------- LISTAR E ALTERAR VAGA ---------- ####
@@ -368,7 +539,14 @@ def listaparaalteravaga(pk):
     data = cursor1.fetchall()
     conn1.commit()
     
-    return render_template('alteravaga.html', datas=data, pk = pk)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    # User is loggedin show them the home page
+        return render_template('alteravaga.html', datas=data, pk = pk)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
 
 
 @app.route('/alterarvaga/<int:pk>/', methods=['POST', 'GET'])
@@ -382,18 +560,17 @@ def alterarvaga(pk):
         cursor.execute('UPDATE Vaga SET NumeroVaga=%s, Situacao=%s WHERE idVaga=%s',
                        (numerovaga, situacaovaga, str(pk)))
         conn.commit()
-
     return render_template('alteravaga.html', pk = pk)
 #### ------------- DELETAR VAGA ---------- ####
 
-@app.route('/deletarvaga/<int:pk>/', methods=['GET'])
-def deletarvaga(pk):
-   conn = mysql.connect()
-   cursor = conn.cursor()
-   cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
-   data = cursor.fetchall()
-   conn.commit()
-   return render_template('cadastrovaga.html', datas=data, pk = pk)
+#@app.route('/deletarvaga/<int:pk>/', methods=['GET'])
+#def deletaratendente(pk):
+#    conn = mysql.connect()
+#    cursor = conn.cursor()
+#    cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
+#    data = cursor.fetchall()
+#    conn.commit()
+#    return render_template('cadastrovaga.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS VAGA ---------- ############################
 
@@ -421,7 +598,24 @@ def main():
     cursor.execute('select idVeiculo, Placa, Cor, Modelo, Veiculo.idCliente, idVaga, DataHora_Entrada, DataHora_Saida, Valor, Veiculo.idAtendente, Comprovante, CpfCliente  from Veiculo inner join Cliente on Veiculo.idCliente = Cliente.idCliente where DataHora_Saida is null')
     data = cursor.fetchall()
     conn.commit()
-    return render_template('index.html',datas=data, cliente=cliente, vaga=vaga, atendente=atendente)
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        # User is loggedin show them the home page
+        return render_template('index.html',datas=data, cliente=cliente, vaga=vaga, atendente=atendente)
+    # User is not loggedin redirect to login page
+    else:
+        return redirect('/login/entrar')
+    
+
+#@app.route('/selectparaforcliente', methods=['POST', 'GET'])
+def selectparaforcliente():
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute('select idCliente from Cliente')
+    data = cursor.fetchall()
+    conn.commit()
+    return render_template('index.html',cliente=data)
+
 
 
 
@@ -442,7 +636,7 @@ def gravarveiculo():
         cursor.execute('UPDATE Vaga SET Situacao="Ocupado" WHERE idVaga=%s', (numerovaga))
         conn.commit()
     
-    return render_template('index.html')
+    return redirect('/')
 
 
 
@@ -460,18 +654,70 @@ def registrarsaida(pk):
 
 #### ------------- DELETAR VEICULO ---------- ####
 
-@app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
-def deletarveiculo(pk):
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
-    data = cursor.fetchall()
-    conn.commit()
-    return render_template('cadastroveiculo.html', datas=data, pk = pk)
+#@app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
+#def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastroveiculo.html', datas=data, pk = pk)
 
 ############################ ------------- FIM ROTAS VEICULO ---------- ############################
 
 
+
+#DELETE
+
+#DELETAR ATENDENTE
+# @app.route('/deletaratendente/<int:pk>/', methods=['GET'])
+# def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Atendente where idAtendente = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastroatendente.html', datas=data, pk = pk)
+
+# #DELETAR MANOBRISTA
+# @app.route('/deletarmanobrista/<int:pk>/', methods=['GET'])
+# def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Manobrista where idManobrista = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastromanobrista.html', datas=data, pk = pk)
+
+# #DELETAR CLIENTE
+# @app.route('/deletarcliente/<int:pk>/', methods=['GET'])
+# def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Cliente where idCliente = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastrocliente.html', datas=data, pk = pk)
+
+# #DELETAR VAGA
+# @app.route('/deletarvaga/<int:pk>/', methods=['GET'])
+# def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Vaga where idVaga = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastrovaga.html', datas=data, pk = pk)
+
+# #DELETAR VEICULO
+# @app.route('/deletarveiculo/<int:pk>/', methods=['GET'])
+# def deletaratendente(pk):
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute('DELETE from Veiculo where idVeiculo = ' + str(pk))
+#     data = cursor.fetchall()
+#     conn.commit()
+#     return render_template('cadastroveiculo.html', datas=data, pk = pk)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5008))
