@@ -6,6 +6,7 @@ SELECT * FROM Cliente;
 SELECT * FROM Manobrista;
 SELECT * FROM Vaga;
 SELECT * FROM Veiculo;
+SELECT * FROM Planos;
 
 CRIANDO TABELA ATENDENTE------------------------
 
@@ -35,10 +36,13 @@ CREATE TABLE Cliente (
   	EnderecoCliente varchar(100),
   	idAtendente int NOT NULL,
   	TelefoneCliente varchar(11) NOT NULL,
+	nomePlano CHAR(6) not NULL,
     PRIMARY KEY (idCliente),
   	UNIQUE(idCliente),
     UNIQUE (CpfCliente),
-  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)  	
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+	constraint cl_idPlano check(nomePlano in ('MENSAL' or 'DIARIA'))
+	--FOREIGN KEY (idPlano) REFERENCES Planos(idPlano)	
 );
 
 CRIANDO TABELA MANOBRISTA------------------------------
@@ -67,6 +71,17 @@ CREATE TABLE Vaga (
   	UNIQUE(idVaga),
     UNIQUE (NumeroVaga)
 );
+
+--CRIANDO TABELA VEICULO
+
+--CREATE TABLE Planos (
+--	idPlano int AUTO_INCREMENT NOT NULL,
+--    nomePlano varchar(15) NOT NULL,
+--    PRIMARY KEY (idPlano),
+--    FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
+--    FOREIGN KEY (CpfCliente) REFERENCES Cliente(CpfCliente)
+--    );
+
 
 CRIANDO TABELA VEICULO------------------------------------
 

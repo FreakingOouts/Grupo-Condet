@@ -186,12 +186,13 @@ def gravarcliente():
     enderecocliente = request.form['enderecoCliente']
     idAtendente = request.form['idAtendente']
     telefonecliente = request.form['telefoneCliente']
+    nomePlano = request.form['nomePlano']
 
-    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and idAtendente and telefonecliente:
+    if cpfcliente and nomecliente and sobrenomecliente and rgcliente and enderecocliente and idAtendente and telefonecliente and nomePlano:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente) VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, idAtendente, telefonecliente))
+        cursor.execute('insert into Cliente (CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente, nomePlano) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                       (cpfcliente, nomecliente, sobrenomecliente, rgcliente, enderecocliente, idAtendente, telefonecliente, nomePlano))
         conn.commit()
     return redirect('/cliente')
 
