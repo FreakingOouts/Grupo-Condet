@@ -102,6 +102,50 @@ CREATE TABLE Veiculo (
 	FOREIGN KEY (idPlano) REFERENCES Cliente(idPlano)
 );
 
+CRIANDO TABELA TICKET------------------------------------
+
+CREATE TABLE Ticket (
+	idTicket int AUTO_INCREMENT NOT NULL,
+  	idVeiculo int NOT NULL,
+    Placa CHAR(7) NOT NULL,
+    Cor varchar(15) NOT NULL,
+  	Modelo varchar(20) NOT NULL,
+    idCliente int,
+  	idVaga int,
+  	DataHora_Entrada datetime,
+  	Valor decimal(10,2),
+  	idAtendente int NOT NULL,
+    PRIMARY KEY (idTicket),
+	FOREIGN KEY (idVeiculo) REFERENCES Veiculo(idVeiculo),
+  	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
+  	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+);
+
+
+CRIANDO TABELA NOTA FISCAL------------------------------------
+
+CREATE TABLE Nota_Fiscal (
+	idNotaFiscal int AUTO_INCREMENT NOT NULL,
+	idTicket int NOT NULL,
+  	idVeiculo int NOT NULL,
+    Placa CHAR(7) NOT NULL,
+    Cor varchar(15) NOT NULL,
+  	Modelo varchar(20) NOT NULL,
+    idCliente int,
+  	idVaga int,
+  	DataHora_Entrada datetime,
+  	DataHora_Saida datetime,
+  	Valor decimal(10,2),
+  	idAtendente int NOT NULL,
+    PRIMARY KEY (idNotaFiscal),
+	FOREIGN KEY (idTicket) REFERENCES Ticket(idTicket),
+	FOREIGN KEY (idVeiculo) REFERENCES Veiculo(idVeiculo),
+  	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
+  	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+);****
+
 CRIANDO TABELA USUARIOS------------------------------------
 
 CREATE TABLE Usuarios (
