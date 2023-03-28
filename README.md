@@ -4,8 +4,6 @@ Repositório para realização de trabalhos
 
 # BANCO DE DADOS OASISPARK
 
-CRIANDO TABELA ATENDENTE------------------------
-
 CREATE TABLE Atendente (
   	idAtendente int AUTO_INCREMENT Not NULL,
     CpfAtendente char(11) NOT NULL,
@@ -20,17 +18,8 @@ CREATE TABLE Atendente (
     UNIQUE (CpfAtendente)
 );
 
-CRIANDO TABELA PLANOS------------------------------------
-
-CREATE TABLE Plano (
-  	idPlano int AUTO_INCREMENT NOT NULL,
-    nomePlano VARCHAR(25) NOT NULL,
-    PRIMARY KEY (idPlano),
-  	UNIQUE(idPlano)
-);
 
 
-CRIANDO TABELA CLIENTE -------------------------------
 
 CREATE TABLE Cliente (
   	idCliente int AUTO_INCREMENT NOT NULL,
@@ -48,8 +37,9 @@ CREATE TABLE Cliente (
   	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)  	
 );
 
+alter table Cliente add column nomePlano varchar(20)
+#drop table Cliente
 
-CRIANDO TABELA MANOBRISTA------------------------------
 
 CREATE TABLE Manobrista (
   	idManobrista int AUTO_INCREMENT NOT NULL,
@@ -65,7 +55,7 @@ CREATE TABLE Manobrista (
     UNIQUE (CnhManobrista)
 );
 
-CRIANDO TABELA DE VAGA----------------------------------
+
 
 CREATE TABLE Vaga (
   	idVaga int AUTO_INCREMENT NOT NULL,
@@ -76,7 +66,7 @@ CREATE TABLE Vaga (
     UNIQUE (NumeroVaga)
 );
 
-CRIANDO TABELA VEICULO------------------------------------
+
 
 CREATE TABLE Veiculo (
   	idVeiculo int AUTO_INCREMENT NOT NULL,
@@ -89,17 +79,17 @@ CREATE TABLE Veiculo (
   	DataHora_Saida datetime,
   	Valor decimal(10,2),
   	idAtendente int NOT NULL,
-  	idPlano int,
+  	Comprovante varchar(100),
     PRIMARY KEY (idVeiculo),
   	UNIQUE(idVeiculo),
     UNIQUE (Placa),
   	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
   	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
-  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente),
-	FOREIGN KEY (idPlano) REFERENCES Cliente(idPlano)
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
 );
 
-CRIANDO TABELA TICKET------------------------------------
+
+
 
 CREATE TABLE Ticket (
 	idTicket int AUTO_INCREMENT NOT NULL,
@@ -120,7 +110,7 @@ CREATE TABLE Ticket (
 );
 
 
-CRIANDO TABELA NOTA FISCAL------------------------------------
+
 
 CREATE TABLE Nota_Fiscal (
 	idNotaFiscal int AUTO_INCREMENT NOT NULL,
@@ -141,9 +131,7 @@ CREATE TABLE Nota_Fiscal (
   	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
   	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
   	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
-);****
-
-CRIANDO TABELA USUARIOS------------------------------------
+);
 
 CREATE TABLE Usuarios (
   	idUser int AUTO_INCREMENT NOT NULL,
