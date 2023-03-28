@@ -162,7 +162,7 @@ def selectcliente():
     cursor = conn.cursor()
     cursor.execute('select idAtendente, CpfAtendente from Atendente')
     atendente = cursor.fetchall()
-    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente from Cliente')
+    cursor.execute('select idCliente, CpfCliente, NomeCliente, SobrenomeCliente, RgCliente, EnderecoCliente, idAtendente, TelefoneCliente, nomePlano from Cliente')
     data = cursor.fetchall()
     conn.commit()
     # Check if user is loggedin
@@ -319,6 +319,7 @@ def gravaratendente():
 
 
 #### ------------- LISTAR E ALTERAR ATENDENTE ---------- ####
+
 @app.route('/listaparaalteraatendente/<int:pk>/', methods=['POST', 'GET'])
 def listaparaalteraatendente(pk):    
     conn1 = mysql.connect()
@@ -719,6 +720,22 @@ def registrarsaida(pk):
 #     data = cursor.fetchall()
 #     conn.commit()
 #     return render_template('cadastroveiculo.html', datas=data, pk = pk)
+
+###   ---------------  GRAVAR PLANO ------------- #####
+
+@app.route('/gravarplano', methods=['POST', 'GET'])
+def gravarplano():
+    idPlano = request.form['idPlano']
+    nomePlano = request.form['nomePlano']
+
+    if idPlano and nomePlano:
+        conn = mysql.connect()
+        cursor = conn.cursos()
+        cursor.execute('insert into Planos (idPlano, nomePlano) VALUES (%s, %s)',
+                        (idPlano, nomePlano))
+        conn.commit()
+    return redirect('/planos')
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5008))
