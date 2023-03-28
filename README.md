@@ -38,19 +38,16 @@ CREATE TABLE Cliente (
     NomeCliente varchar(30) NOT NULL,
   	SobrenomeCliente varchar(50) NOT NULL,
     RgCliente char(9),
-	idPlano int NOT NULL,
   	EnderecoCliente varchar(100),
   	idAtendente int NOT NULL,
   	TelefoneCliente varchar(11) NOT NULL,
+    nomePlano varchar(20) NOT NULL,
     PRIMARY KEY (idCliente),
   	UNIQUE(idCliente),
     UNIQUE (CpfCliente),
-  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente),
-	FOREIGN KEY (idPlano) REFERENCES Plano(idPlano) 
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)  	
 );
 
-ALTER TABLE Cliente
-ADD FOREIGN KEY (idPlano) REFERENCES Plano(idPlano);
 
 CRIANDO TABELA MANOBRISTA------------------------------
 
