@@ -8,8 +8,6 @@ SELECT * FROM Vaga;
 SELECT * FROM Veiculo;
 SELECT * FROM Planos;
 
-CRIANDO TABELA ATENDENTE------------------------
-
 CREATE TABLE Atendente (
   	idAtendente int AUTO_INCREMENT Not NULL,
     CpfAtendente char(11) NOT NULL,
@@ -25,7 +23,7 @@ CREATE TABLE Atendente (
 );
 
 
-CRIANDO TABELA CLIENTE -------------------------------
+
 
 CREATE TABLE Cliente (
   	idCliente int AUTO_INCREMENT NOT NULL,
@@ -36,16 +34,16 @@ CREATE TABLE Cliente (
   	EnderecoCliente varchar(100),
   	idAtendente int NOT NULL,
   	TelefoneCliente varchar(11) NOT NULL,
-	nomePlano CHAR(6) not NULL,
+    nomePlano varchar(20) NOT NULL,
     PRIMARY KEY (idCliente),
   	UNIQUE(idCliente),
     UNIQUE (CpfCliente),
-  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
-	constraint cl_idPlano check(nomePlano in ('MENSAL' or 'DIARIA'))
-	--FOREIGN KEY (idPlano) REFERENCES Planos(idPlano)	
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)  	
 );
 
-CRIANDO TABELA MANOBRISTA------------------------------
+alter table Cliente add column nomePlano varchar(20)
+#drop table Cliente
+
 
 CREATE TABLE Manobrista (
   	idManobrista int AUTO_INCREMENT NOT NULL,
@@ -61,7 +59,7 @@ CREATE TABLE Manobrista (
     UNIQUE (CnhManobrista)
 );
 
-CRIANDO TABELA DE VAGA----------------------------------
+
 
 CREATE TABLE Vaga (
   	idVaga int AUTO_INCREMENT NOT NULL,
@@ -72,18 +70,7 @@ CREATE TABLE Vaga (
     UNIQUE (NumeroVaga)
 );
 
---CRIANDO TABELA VEICULO
 
---CREATE TABLE Planos (
---	idPlano int AUTO_INCREMENT NOT NULL,
---    nomePlano varchar(15) NOT NULL,
---    PRIMARY KEY (idPlano),
---    FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
---    FOREIGN KEY (CpfCliente) REFERENCES Cliente(CpfCliente)
---    );
-
-
-CRIANDO TABELA VEICULO------------------------------------
 
 CREATE TABLE Veiculo (
   	idVeiculo int AUTO_INCREMENT NOT NULL,
@@ -92,8 +79,8 @@ CREATE TABLE Veiculo (
   	Modelo varchar(20) NOT NULL,
     idCliente int,
   	idVaga int,
-  	DataHora_Entrada datetime null,
-  	DataHora_Saida datetime null,
+  	DataHora_Entrada datetime,
+  	DataHora_Saida datetime,
   	Valor decimal(10,2),
   	idAtendente int NOT NULL,
   	Comprovante varchar(100),
@@ -103,4 +90,61 @@ CREATE TABLE Veiculo (
   	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
   	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
   	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+);
+
+
+
+
+CREATE TABLE Ticket (
+	idTicket int AUTO_INCREMENT NOT NULL,
+  	idVeiculo int NOT NULL,
+    Placa CHAR(7) NOT NULL,
+    Cor varchar(15) NOT NULL,
+  	Modelo varchar(20) NOT NULL,
+    idCliente int,
+  	idVaga int,
+  	DataHora_Entrada datetime,
+  	Valor decimal(10,2),
+  	idAtendente int NOT NULL,
+    PRIMARY KEY (idTicket),
+	FOREIGN KEY (idVeiculo) REFERENCES Veiculo(idVeiculo),
+  	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
+  	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+);
+
+
+
+
+CREATE TABLE Nota_Fiscal (
+	idNotaFiscal int AUTO_INCREMENT NOT NULL,
+	idTicket int NOT NULL,
+  	idVeiculo int NOT NULL,
+    Placa CHAR(7) NOT NULL,
+    Cor varchar(15) NOT NULL,
+  	Modelo varchar(20) NOT NULL,
+    idCliente int,
+  	idVaga int,
+  	DataHora_Entrada datetime,
+  	DataHora_Saida datetime,
+  	Valor decimal(10,2),
+  	idAtendente int NOT NULL,
+    PRIMARY KEY (idNotaFiscal),
+	FOREIGN KEY (idTicket) REFERENCES Ticket(idTicket),
+	FOREIGN KEY (idVeiculo) REFERENCES Veiculo(idVeiculo),
+  	FOREIGN KEY (idCliente) REFERENCES Cliente(idCliente),
+  	FOREIGN KEY (idVaga) REFERENCES Vaga(idVaga),
+  	FOREIGN KEY (idAtendente) REFERENCES Atendente(idAtendente)
+);
+
+CREATE TABLE Usuarios (
+  	idUser int AUTO_INCREMENT NOT NULL,
+	Usuario varchar(20) NOT NULL,    
+  	Senha varchar(20) NOT NULL,
+	Nome varchar(50) NOT NULL,
+    Email varchar(50) NULL,
+	Telefone varchar(20) NULL,
+	PRIMARY KEY (idUser),
+  	UNIQUE(idUser),
+    UNIQUE (Usuario)
 );
