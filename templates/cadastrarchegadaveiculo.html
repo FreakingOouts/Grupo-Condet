@@ -7,11 +7,10 @@
 <HTML lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv='refresh' content='{{test}}' />
     <script src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.js" integrity="sha512-eSeh0V+8U3qoxFnK3KgBsM69hrMOGMBy3CNxq/T4BArsSQJfKVsKb5joMqIPrNMjRQSTl4xG8oJRpgU2o9I7HQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.css" integrity="sha512-0nkKORjFgcyxv3HbE4rzFUlENUMNqic/EzDIeYCgsKa/nwqr2B91Vu/tNAu4Q0cBuG4Xe/D1f/freEci/7GDRA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Oasis Park</title>
+    <title>Oasis Park - Cadastrar Entrada</title>
 </head>
 
 <style>
@@ -25,51 +24,39 @@
       <div id="header"></div><br />
     </header>
 <div class="container pt-3 pb-2">
-  
-  <center><div class="{{classe}}" id="msg">{{ msg }}</div></center>
-  
-<form action="{{ url_for('filtrarplaca') }}" method="post">
-  <div class="form-row">      
-    <div class="col-md-4 mb-3">
-      <input type="text" class="form-control" id="placaveiculo" placeholder="Placa do veículo" name="placaveiculo" required>
-      <div class="valid-tooltip">
-        Looks good!
-      </div>
-    </div>      
-    <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Filtrar</button>
-      <!-- <a href="{{ url_for('filtrarplaca') }}" class="btn btn-primary">Filtrar</a> -->
-    </div>
-  </div>
-</form>
-{% for item in infos %}
-<form  action="{{ url_for('registrarentrada') }}" method="POST">      
-    <div class="form-row">
+  <form class="needs-validation" novalidate action="/registrarentrada" method="post" id="insert-veiculo">
+    {% for item in infos %} 
+    <div class="form-row">      
       <div class="col-md-4 mb-3">
-        <label for="idveiculo">Plano</label>
-        <input type="text" class="form-control" id="plano" placeholder="Id Veiculo" name="plano" value="{{item[8]}}" readonly>
+        <input type="text" class="form-control" id="placaveiculo" placeholder="Placa do veículo" value="{{item[1]}}" name="placaveiculo" disabled>
+        <div class="valid-tooltip">
+          Looks good!
+        </div>
       </div>
     </div>
+    
     <div class="form-row">
-      <div class="col-md-4 mb-3">
-        <label for="idveiculo">Id Veículo</label>
-        <input type="text" class="form-control" id="idveiculo" placeholder="Id Veiculo" name="idveiculo" value="{{item[0]}}" readonly>
-      </div>   
       <div class="col-md-4 mb-3">
         <label for="corveiculo">Cor</label>
-        <input type="text" class="form-control" id="corveiculo" placeholder="Cor do veículo" name="corveiculo" value="{{item[3]}}" readonly>
+        <input type="text" class="form-control" id="corveiculo" placeholder="Cor do veículo" name="corveiculo" value="{{item[3]}}" disabled>
+        <div class="valid-tooltip">
+          Looks good!
+        </div>
       </div>
       <div class="col-md-4 mb-3">
         <label for="modeloveiculo">Modelo</label>
         <div class="input-group">         
-          <input type="text" class="form-control" id="modeloveiculo" placeholder="Modelo do veículo" name="modeloveiculo" value="{{item[2]}}" readonly>
+          <input type="text" class="form-control" id="modeloveiculo" placeholder="Modelo do veículo" name="modeloveiculo" value="{{item[2]}}" aria-describedby="validationTooltipUsernamePrepend" disabled>
+          <div class="invalid-tooltip">
+            Please choose a unique and valid username.
+          </div>
         </div>
       </div>
     </div>
     <div class="form-row">
       <div class="col-md-4 mb-3">
         <label for="Cliente" class="col-form-label">Proprietário:</label><br>
-        <input type="text" class="form-control" name="cpfcliente" id="cpfcliente" placeholder="CPF Cliente" value="{{item[4]}}" readonly>          
+        <input type="text" class="form-control" name="cpfcliente" id="cpfcliente" placeholder="CPF Cliente" value="{{item[4]}}" disabled>          
         <!-- <select class="ch form-control" name="cpfcliente" data-live-search="true" id="selectcliente">
           <option selected>Selecione</option>
           {% for item in cliente %}
@@ -79,7 +66,7 @@
       </div>
       <div class="col-md-4 mb-3">
         <label for="Atendente" class="col-form-label">Atendente:</label> <br>
-        <input type="text" class="form-control" name="cpfatendente" id="cpfatendente" placeholder="CPF Atendente" value="{{item[6]}}" readonly>
+        <input type="text" class="form-control" name="cpfatendente" id="cpfatendente" placeholder="CPF Atendente" value="{{item[6]}}" disabled>
         <!-- <select class="custom-select" id="inputGroupSelect01" name="cpfatendente">
           <option selected>Selecione</option>
           {% for item in atendente %}
@@ -87,22 +74,23 @@
           {% endfor %}   
         </select> -->
       </div>
-      
       <div class="col-md-4 mb-3">
         <label for="Vaga" class="col-form-label">Vaga:</label> <br>               
-        <select class="custom-select" id="inputGroupSelect01" name="numerovaga">        
+        <select class="custom-select" id="inputGroupSelect01" name="numerovaga">
+          <option selected>Selecione</option>
           {% for item in vagas %}
           <option value="{{item[0]}}">{{item[0]}}</option>
           {% endfor %}   
         </select>
       </div>
     </div>
+    {% endfor %}
     <button class="btn btn-primary" type="submit">Cadastrar</button>
   </form>
-  {% endfor %}
+  
 </div>
 
-<div class="container">
+<!-- <div class="container">
   <table class="table table-hover">
     <thead class="thead-dark">
       <tr align="center">
@@ -135,7 +123,7 @@
       {% endfor %}
     </tbody>
   </table>
-</div>
+</div> -->
 
 </body>
 <footer>
